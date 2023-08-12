@@ -1,8 +1,8 @@
 import {createElement} from '../render';
 
-function createBriefTemplate() {
+function createTripInfoTemplate() {
   return (
-    `<section class="trip-main__trip-info  trip-info">
+    /*html*/`<section class="trip-main__trip-info  trip-info">
       <div class="trip-info__main">
         <h1 class="trip-info__title">Amsterdam — Chamonix — Geneva</h1>
 
@@ -15,9 +15,9 @@ function createBriefTemplate() {
     </section>`);
 }
 
-export default class BriefView {
+export default class TripInfoView {
   getTemplate() {
-    return createBriefTemplate();
+    return createTripInfoTemplate();
   }
 
   getElement() {
