@@ -1,6 +1,6 @@
 import {createElement} from '../render';
 
-function createPointTemplate() {
+function createSortTemplate() {
   return (
     /*html*/`<form class="trip-events__trip-sort  trip-sort" action="#" method="get">
       <div class="trip-sort__item  trip-sort__item--day">
@@ -30,9 +30,9 @@ function createPointTemplate() {
     </form>`);
 }
 
-export default class PointView {
+export default class SortView {
   getTemplate() {
-    return createPointTemplate();
+    return createSortTemplate();
   }
 
   getElement() {

@@ -1,34 +1,52 @@
 import {createElement} from '../render';
+import {formatStringToShortDate, formatStringToTime, getPointDuration} from '../utils';
 
-function createTripTemplate() {
+function getEventOffersTemplate(pointOffers) {
+  let eventOffersTemplate = '';
+
+  if (pointOffers.length > 0) {
+    pointOffers.forEach((offer) => {
+      const {title, price} = offer;
+
+      eventOffersTemplate += `
+        <li class="event__offer">
+          <span class="event__offer-title">${title}</span>
+          &plus;&euro;&nbsp;
+          <span class="event__offer-price">${price}</span>
+        </li>`;
+    });
+  }
+
+  return eventOffersTemplate;
+}
+
+function createPointTemplate({point, pointDestination, pointOffers}) {
+  const {dateFrom, dateTo, type, basePrice, isFavorite} = point;
+
   return (
     `<li class="trip-events__item">
       <div class="event">
-        <time class="event__date" datetime="2019-03-18">MAR 18</time>
+      <time class="event__date" datetime="${dateFrom}">${formatStringToShortDate(dateFrom)}</time>
         <div class="event__type">
-          <img class="event__type-icon" width="42" height="42" src="img/icons/taxi.png" alt="Event type icon">
+          <img class="event__type-icon" width="42" height="42" src="img/icons/${type}.png" alt="Event type icon">
         </div>
-        <h3 class="event__title">Taxi Amsterdam</h3>
+        <h3 class="event__title">${type} ${pointDestination ? pointDestination.name : ''}</h3>
         <div class="event__schedule">
           <p class="event__time">
-            <time class="event__start-time" datetime="2019-03-18T10:30">10:30</time>
+            <time class="event__start-time" datetime="${dateFrom} ">${formatStringToTime(dateFrom)}</time>
             —
-            <time class="event__end-time" datetime="2019-03-18T11:00">11:00</time>
+            <time class="event__end-time" datetime="${dateTo}">${formatStringToTime(dateTo)}</time>
           </p>
-          <p class="event__duration">30M</p>
+          <p class="event__duration">${getPointDuration(dateTo, dateFrom)}</p>
         </div>
         <p class="event__price">
-          €&nbsp;<span class="event__price-value">20</span>
+          €&nbsp;<span class="event__price-value">${basePrice}</span>
         </p>
         <h4 class="visually-hidden">Offers:</h4>
         <ul class="event__selected-offers">
-          <li class="event__offer">
-            <span class="event__offer-title">Order Uber</span>
-            +€&nbsp;
-            <span class="event__offer-price">20</span>
-          </li>
+          ${getEventOffersTemplate(pointOffers)}
         </ul>
-        <button class="event__favorite-btn event__favorite-btn--active" type="button">
+        <button class="event__favorite-btn${isFavorite ? ' event__favorite-btn--active' : ''}" type="button">
           <span class="visually-hidden">Add to favorite</span>
           <svg class="event__favorite-icon" width="28" height="28" viewBox="0 0 28 28">
             <path d="M14 21l-8.22899 4.3262 1.57159-9.1631L.685209 9.67376 9.8855 8.33688 14 0l4.1145 8.33688 9.2003 1.33688-6.6574 6.48934 1.5716 9.1631L14 21z"></path>
@@ -41,9 +59,19 @@ function createTripTemplate() {
     </li>`);
 }
 
-export default class TripView {
+export default class PointView {
+  constructor({pointDestination, pointOffers, point}) {
+    this.pointDestination = pointDestination;
+    this.pointOffers = pointOffers;
+    this.point = point;
+  }
+
   getTemplate() {
-    return createTripTemplate();
+    return createPointTemplate({
+      pointDestination: this.pointDestination,
+      pointOffers: this.pointOffers,
+      point: this.point,
+    });
   }
 
   getElement() {
