@@ -1,36 +1,37 @@
-import './views/brief-view.js';
-import './views/filter-view.js';
-import './views/add-button-view.js';
-import './views/sort-view.js';
-import './views/list-view.js';
+import TripInfoView from './view/trip-info-view.js';
+import FilterView from './view/filter-view.js';
+import AddButtonView from './view/add-button-view.js';
+import BoardPresenter from './presenter/board-presenter.js';
 
-/**
- * @type {import('./views/brief-view').default}
- */
-const briefView = document.querySelector('brief-view');
+import MockService from './service/mock-service.js';
+import DestinationsModel from './model/destinations-model.js';
+import OffersModel from './model/offers-model.js';
+import PointsModel from './model/points-model.js';
 
-/**
- * @type {import('./views/filter-view').default}
- */
-const filterView = document.querySelector('filter-view');
+import {render, RenderPosition} from './render.js';
 
-/**
- * @type {import('./views/add-button-view').default}
- */
-const addButtonView = document.querySelector('add-button-view');
+const bodyElement = document.querySelector('.page-body');
+const headerElement = bodyElement.querySelector('.page-header');
+const tripInfoElement = headerElement.querySelector('.trip-main');
+const filtersElement = headerElement.querySelector('.trip-controls__filters');
+const mainElement = bodyElement.querySelector('.page-main');
+const eventListElement = mainElement.querySelector('.trip-events');
 
-/**
- * @type {import('./views/sort-view').default}
- */
-const sortView = document.querySelector('sort-view');
+const mockService = new MockService();
 
-/**
- * @type {import('./views/list-view').default}
- */
-const listView = document.querySelector('list-view');
+const destinationsModel = new DestinationsModel(mockService);
+const offersModel = new OffersModel(mockService);
+const pointsModel = new PointsModel(mockService);
 
-briefView.render();
-filterView.render();
-addButtonView.render();
-sortView.render();
-listView.render();
+const boardPresenter = new BoardPresenter({
+  container: eventListElement,
+  destinationsModel,
+  offersModel,
+  pointsModel,
+});
+
+render(new TripInfoView(), tripInfoElement, RenderPosition.AFTERBEGIN);
+render(new FilterView(), filtersElement);
+render(new AddButtonView(), tripInfoElement);
+
+boardPresenter.init();
