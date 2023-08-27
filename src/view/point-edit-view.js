@@ -1,8 +1,8 @@
-import {createElement} from '../render';
-import { POINT_EMPTY } from '../mock/const';
+import AbstractView from '../framework/view/abstract-view';
+import {POINT_EMPTY} from '../mock/const';
 import {getScheduleDate, capitalize, changeToLowercase} from '../utils';
 
-function getEventTypesTemplate(pointTypes) {
+function createEventTypesTemplate(pointTypes) {
   if (pointTypes) {
     return pointTypes.map((type) => `
       <div class="event__type-item">
@@ -14,12 +14,12 @@ function getEventTypesTemplate(pointTypes) {
   return '';
 }
 
-function getDestinationListTemplate(name, pointDestinations) {
+function createDestinationListTemplate(name, destinations) {
   let destinationListTemplate = `
     <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${name}" list="destination-list-1">
     <datalist id="destination-list-1">`;
 
-  pointDestinations.forEach((pointDestination) => {
+  destinations.forEach((pointDestination) => {
     destinationListTemplate +=
       `<option value="${pointDestination.name}"></option>
       `;
@@ -27,7 +27,7 @@ function getDestinationListTemplate(name, pointDestinations) {
   return destinationListTemplate;
 }
 
-function getEventOffersTemplate(pointOffersByType) {
+function createEventOffersTemplate(pointOffersByType) {
   let eventOffersTemplate = '';
 
   if (pointOffersByType) {
@@ -46,7 +46,7 @@ function getEventOffersTemplate(pointOffersByType) {
   return eventOffersTemplate;
 }
 
-function getDestinationTemplate({description, pictures}) {
+function createDestinationTemplate({description, pictures}) {
   let destinationTemplate =
     `<section class="event__section  event__section--destination">
       <h3 class="event__section-title  event__section-title--destination">Destination</h3>
@@ -67,7 +67,7 @@ function getDestinationTemplate({description, pictures}) {
   return destinationTemplate;
 }
 
-function createPointEditTemplate({pointDestinations, pointOffersByType, point, destinationById, pointTypes}) {
+function createPointEditTemplate({destinations, pointOffersByType, point, pointDestination, pointTypes}) {
   const {type, dateTo, dateFrom, basePrice} = point;
 
   return (
@@ -85,7 +85,7 @@ function createPointEditTemplate({pointDestinations, pointOffersByType, point, d
               <fieldset class="event__type-group">
                 <legend class="visually-hidden">Event type</legend>
 
-                ${getEventTypesTemplate(pointTypes)}
+                ${createEventTypesTemplate(pointTypes)}
               </fieldset>
             </div>
           </div>
@@ -94,16 +94,16 @@ function createPointEditTemplate({pointDestinations, pointOffersByType, point, d
             <label class="event__label  event__type-output" for="event-destination-1">
               ${type}
             </label>
-              ${getDestinationListTemplate(destinationById.name, pointDestinations)}
+              ${createDestinationListTemplate(pointDestination.name, destinations)}
             </datalist>
           </div>
 
           <div class="event__field-group  event__field-group--time">
             <label class="visually-hidden" for="event-start-time-1">From</label>
-            <input class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="${getScheduleDate(dateTo)}">
+            <input class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="${getScheduleDate(dateFrom)}">
             —
             <label class="visually-hidden" for="event-end-time-1">To</label>
-            <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="${getScheduleDate(dateFrom)}">
+            <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="${getScheduleDate(dateTo)}">
           </div>
 
           <div class="event__field-group  event__field-group--price">
@@ -122,44 +122,48 @@ function createPointEditTemplate({pointDestinations, pointOffersByType, point, d
             <h3 class="event__section-title  event__section-title--offers">Offers</h3>
 
             <div class="event__available-offers">
-              ${getEventOffersTemplate(pointOffersByType)}
+              ${createEventOffersTemplate(pointOffersByType)}
             </div>
           </section>
 
-          ${getDestinationTemplate(destinationById)}
+          ${createDestinationTemplate(pointDestination)}
         </section>
       </form>
     </li>`);
 }
 
-export default class PointEditView {
-  constructor({pointDestinations, pointOffersByType, point = POINT_EMPTY, destinationById, pointTypes}) {
-    this.pointDestinations = pointDestinations;
-    this.pointOffersByType = pointOffersByType;
-    this.point = point;
-    this.destinationById = destinationById;
-    this.pointTypes = pointTypes;
+export default class PointEditView extends AbstractView {
+  #point = null;
+  #destinations = null;
+  #pointDestination = null;
+  #pointOffersByType = null;
+  #pointTypes = null;
+  #handleFormSubmit = null;
+
+  constructor({destinations, pointDestination, pointOffersByType, point = POINT_EMPTY, pointTypes, onFormSubmit}) {
+    super();
+    this.#destinations = destinations;
+    this.#pointDestination = pointDestination;
+    this.#pointOffersByType = pointOffersByType;
+    this.#point = point;
+    this.#pointTypes = pointTypes;
+    this.#handleFormSubmit = onFormSubmit;
+
+    this.element.querySelector('form').addEventListener('submit', this.#formSubmitHandler);
   }
 
-  getTemplate() {
+  get template() {
     return createPointEditTemplate({
-      pointDestinations: this.pointDestinations,
-      pointOffersByType: this.pointOffersByType,
-      point: this.point,
-      destinationById: this.destinationById,
-      pointTypes: this.pointTypes,
+      destinations: this.#destinations,
+      pointOffersByType: this.#pointOffersByType,
+      point: this.#point,
+      pointDestination: this.#pointDestination,
+      pointTypes: this.#pointTypes,
     });
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
-  }
+  #formSubmitHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleFormSubmit();
+  };
 }

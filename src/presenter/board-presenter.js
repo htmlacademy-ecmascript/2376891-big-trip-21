@@ -2,44 +2,91 @@ import SortView from '../view/sort-view.js';
 import EventListView from '../view/event-list-view.js';
 import PointView from '../view/point-view.js';
 import PointEditView from '../view/point-edit-view.js';
-import { render } from '../render.js';
+import {render, replace} from '../framework/render.js';
+import NoPointView from '../view/no-point-view.js';
 
 export default class BoardPresenter {
-  eventListComponent = new EventListView();
+  #container = null;
+  #destinationsModel = null;
+  #offersModel = null;
+  #pointsModel = null;
+
+  #eventListComponent = new EventListView();
+
+  #boardPoints = [];
+  #pointTypes = null;
 
   constructor({container, destinationsModel, offersModel, pointsModel}) {
-    this.container = container;
-    this.destinationsModel = destinationsModel;
-    this.offersModel = offersModel;
-    this.pointsModel = pointsModel;
+    this.#container = container;
+    this.#destinationsModel = destinationsModel;
+    this.#offersModel = offersModel;
+    this.#pointsModel = pointsModel;
   }
 
   init() {
-    this.boardPoints = [...this.pointsModel.getPoints()];
+    this.#boardPoints = [...this.#pointsModel.points];
+    this.#pointTypes = this.#boardPoints.map((point) => point.type);
 
-    this.destinationById = this.destinationsModel.getDestinationsById(this.boardPoints[0].destination);
-    this.pointOffersByType = this.offersModel.getOffersByType(this.boardPoints[0].type);
-    this.pointTypes = this.boardPoints.map((point) => point.type);
+    this.#renderBoard();
+  }
 
-    render(new SortView(), this.container);
-    render(this.eventListComponent, this.container);
-    render(new PointEditView({
-      pointDestinations: this.destinationsModel.getDestinations(),
+  #renderPoint(point) {
+    this.destinationById = this.#destinationsModel.getDestinationsById(point.destination);
+    this.pointOffersByType = this.#offersModel.getOffersByType(point.type);
+    this.pointOffers = point.offers.map((IdOffer) => this.pointOffersByType.find((offer) => offer.id === IdOffer));
+
+    const escKeyDownHandler = (evt) => {
+      if (evt.key === 'Escape') {
+        evt.preventDefault();
+        replaceFormToPoint();
+        document.removeEventListener('keydown', escKeyDownHandler);
+      }
+    };
+
+    const pointComponent = new PointView({
+      pointDestination: this.destinationById,
+      pointOffers: this.pointOffers,
+      point: point,
+      onEditClick: () => {
+        replacePointToForm();
+        document.addEventListener('keydown', escKeyDownHandler);
+      }
+    });
+
+    const pointEditComponent = new PointEditView({
+      destinations: this.#destinationsModel.destinations,
+      pointDestination: this.destinationById,
       pointOffersByType: this.pointOffersByType,
-      point: this.boardPoints[0],
-      destinationById: this.destinationById,
-      pointTypes: this.pointTypes,
-    }), this.eventListComponent.getElement());
+      point: point,
+      pointTypes: this.#pointTypes,
+      onFormSubmit: () => {
+        replaceFormToPoint();
+        document.removeEventListener('keydown', escKeyDownHandler);
+      }
+    });
 
-    for (let i = 1; i < this.boardPoints.length; i++) {
-      this.pointOffersByType = this.offersModel.getOffersByType(this.boardPoints[i].type);
-      this.pointOffers = this.boardPoints[i].offers.map((IdOffer) => this.pointOffersByType.find((offer) => offer.id === IdOffer));
+    function replacePointToForm() {
+      replace(pointEditComponent, pointComponent);
+    }
 
-      render(new PointView({
-        pointDestination: this.destinationsModel.getDestinationsById(this.boardPoints[i].destination),
-        pointOffers: this.pointOffers,
-        point: this.boardPoints[i],
-      }), this.eventListComponent.getElement());
+    function replaceFormToPoint() {
+      replace(pointComponent, pointEditComponent);
+    }
+
+    render(pointComponent, this.#eventListComponent.element);
+  }
+
+  #renderBoard() {
+    render(new SortView(), this.#container);
+    render(this.#eventListComponent, this.#container);
+
+    if (this.#boardPoints.length === 0) {
+      render(new NoPointView(), this.#eventListComponent.element);
+      return;
+    }
+
+    for (let i = 0; i < this.#boardPoints.length; i++) {
+      this.#renderPoint(this.#boardPoints[i]);
     }
   }
 }
