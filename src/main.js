@@ -8,11 +8,18 @@ import DestinationsModel from './model/destinations-model.js';
 import OffersModel from './model/offers-model.js';
 import PointsModel from './model/points-model.js';
 
-import {render, RenderPosition} from './render.js';
+import {render, RenderPosition} from './framework/render.js';
 
 const bodyElement = document.querySelector('.page-body');
 const headerElement = bodyElement.querySelector('.page-header');
+
+/**
+ * @type {HTMLElement}
+ */
 const tripInfoElement = headerElement.querySelector('.trip-main');
+/**
+ * @type {HTMLElement}
+ */
 const filtersElement = headerElement.querySelector('.trip-controls__filters');
 const mainElement = bodyElement.querySelector('.page-main');
 const eventListElement = mainElement.querySelector('.trip-events');
