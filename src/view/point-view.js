@@ -1,5 +1,5 @@
-import AbstractView from '../framework/view/abstract-view';
-import {formatStringToShortDate, formatStringToTime, getPointDuration} from '../utils';
+import AbstractView from '../framework/view/abstract-view.js';
+import {formatStringToShortDate, formatStringToTime, getPointDuration} from '../utils/date.js';
 
 function createEventOffersTemplate(pointOffers) {
   let eventOffersTemplate = '';
