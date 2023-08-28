@@ -1,12 +1,12 @@
-import AbstractView from '../framework/view/abstract-view';
+// import AbstractView from '../framework/view/abstract-view.js';
 
-function createBriefTemplate() {
-  return (
-    ``);
-}
+// function createBriefTemplate() {
+//   return (
+//     ``);
+// }
 
-export default class BriefView extends AbstractView {
-  get template() {
-    return createBriefTemplate();
-  }
-}
+// export default class BriefView extends AbstractView {
+//   get template() {
+//     return createBriefTemplate();
+//   }
+// }

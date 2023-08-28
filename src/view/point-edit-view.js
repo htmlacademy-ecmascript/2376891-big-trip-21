@@ -1,6 +1,7 @@
-import AbstractView from '../framework/view/abstract-view';
-import {POINT_EMPTY} from '../mock/const';
-import {getScheduleDate, capitalize, changeToLowercase} from '../utils';
+import AbstractView from '../framework/view/abstract-view.js';
+import {POINT_EMPTY} from '../mock/const.js';
+import {getScheduleDate} from '../utils/date.js';
+import { capitalize, changeToLowercase } from '../utils/common.js';
 
 function createEventTypesTemplate(pointTypes) {
   if (pointTypes) {

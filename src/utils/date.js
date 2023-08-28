@@ -2,9 +2,6 @@ import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
-dayjs.extend(duration);
-dayjs.extend(relativeTime);
-
 const MSEC_IN_SEC = 1000;
 const SEC_IN_MIN = 60;
 const MIN_IN_HOUR = 60;
@@ -19,19 +16,8 @@ const TIME_FORMAT = 'HH:mm';
 const DATE_FORMAT = 'YYYY-MM-DD';
 const SCHEDULE_DATE_FORMAT = 'DD/MM/YY HH:mm';
 
-function getRandomInteger(a = 0, b = 1) {
-  const lower = Math.ceil(Math.min(a, b));
-  const upper = Math.floor(Math.max(a, b));
-
-  return Math.floor(lower + Math.random() * (upper - lower + 1));
-}
-
-function getRandomValue(items) {
-  if (items.length > 1) {
-    return items[getRandomInteger(0, items.length - 1)];
-  }
-  return items[0];
-}
+dayjs.extend(duration);
+dayjs.extend(relativeTime);
 
 function formatStringToDateTime(date) {
   return dayjs(date).format(DATE_TIME_FORMAT);
@@ -72,12 +58,17 @@ function getScheduleDate(data) {
   return data ? dayjs(data).format(SCHEDULE_DATE_FORMAT) : '';
 }
 
-function capitalize(string) {
-  return `${string[0].toUpperCase()}${string.slice(1)}`;
+function isPointFuture(date) {
+  return dayjs(date) >= dayjs();
 }
 
-function changeToLowercase(string) {
-  return string.split(' ').join('').toLowerCase();
+function isPointPresent(dateFrom, dateTo) {
+  return dateFrom <= dayjs() && dateTo >= dayjs();
 }
 
-export {getRandomInteger, getRandomValue, formatStringToDateTime, formatStringToShortDate, formatStringToTime, formatStringToDate, getPointDuration, getScheduleDate, capitalize, changeToLowercase};
+function isPointPast(date) {
+  return dayjs(date) < dayjs();
+}
+
+export {formatStringToDateTime, formatStringToShortDate, formatStringToTime, formatStringToDate, getPointDuration, getScheduleDate, isPointFuture, isPointPresent, isPointPast};
+
