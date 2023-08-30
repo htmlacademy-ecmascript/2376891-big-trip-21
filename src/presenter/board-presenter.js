@@ -1,9 +1,9 @@
 import SortView from '../view/sort-view.js';
 import EventListView from '../view/event-list-view.js';
-import PointView from '../view/point-view.js';
-import PointEditView from '../view/point-edit-view.js';
-import {render, replace} from '../framework/render.js';
+import {render} from '../framework/render.js';
 import NoPointView from '../view/no-point-view.js';
+import PointPresenter from './point-presenter.js';
+import { updateItem } from '../utils/common.js';
 
 export default class BoardPresenter {
   #container = null;
@@ -12,9 +12,12 @@ export default class BoardPresenter {
   #pointsModel = null;
 
   #eventListComponent = new EventListView();
+  #sortComponent = new SortView();
+  #noPointComponent = new NoPointView();
 
   #boardPoints = [];
   #pointTypes = null;
+  #pointPresenters = new Map();
 
   constructor({container, destinationsModel, offersModel, pointsModel}) {
     this.#container = container;
@@ -30,63 +33,54 @@ export default class BoardPresenter {
     this.#renderBoard();
   }
 
+  #renderSort() {
+    render(this.#sortComponent, this.#container);
+  }
+
+  #handlePointChange = (updatedPoint) => {
+    this.#boardPoints = updateItem(this.#boardPoints, updatedPoint);
+    this.#pointPresenters.get(updatedPoint.id).init(updatedPoint);
+  };
+
+  #handleModeChange = () => {
+    this.#pointPresenters.forEach((presenter) => presenter.resetView());
+  };
+
   #renderPoint(point) {
-    this.destinationById = this.#destinationsModel.getDestinationsById(point.destination);
-    this.pointOffersByType = this.#offersModel.getOffersByType(point.type);
-    this.pointOffers = point.offers.map((IdOffer) => this.pointOffersByType.find((offer) => offer.id === IdOffer));
-
-    const escKeyDownHandler = (evt) => {
-      if (evt.key === 'Escape') {
-        evt.preventDefault();
-        replaceFormToPoint();
-        document.removeEventListener('keydown', escKeyDownHandler);
-      }
-    };
-
-    const pointComponent = new PointView({
-      pointDestination: this.destinationById,
-      pointOffers: this.pointOffers,
-      point: point,
-      onEditClick: () => {
-        replacePointToForm();
-        document.addEventListener('keydown', escKeyDownHandler);
-      }
-    });
-
-    const pointEditComponent = new PointEditView({
-      destinations: this.#destinationsModel.destinations,
-      pointDestination: this.destinationById,
-      pointOffersByType: this.pointOffersByType,
-      point: point,
+    const pointPresenter = new PointPresenter({
+      pointListContainer: this.#eventListComponent.element,
+      destinationsModel: this.#destinationsModel,
+      offersModel: this.#offersModel,
       pointTypes: this.#pointTypes,
-      onFormSubmit: () => {
-        replaceFormToPoint();
-        document.removeEventListener('keydown', escKeyDownHandler);
-      }
+      onDataChange: this.#handlePointChange,
+      onModeChange: this.#handleModeChange,
     });
 
-    function replacePointToForm() {
-      replace(pointEditComponent, pointComponent);
-    }
+    pointPresenter.init(point);
+    this.#pointPresenters.set(point.id, pointPresenter);
+  }
 
-    function replaceFormToPoint() {
-      replace(pointComponent, pointEditComponent);
-    }
+  #renderPoints() {
+    this.#boardPoints.forEach((point) => this.#renderPoint(point));
+  }
 
-    render(pointComponent, this.#eventListComponent.element);
+  #renderNoPoints() {
+    render(this.#noPointComponent, this.#eventListComponent.element);
   }
 
   #renderBoard() {
-    render(new SortView(), this.#container);
+    this.#renderSort();
     render(this.#eventListComponent, this.#container);
 
     if (this.#boardPoints.length === 0) {
-      render(new NoPointView(), this.#eventListComponent.element);
+      this.#renderNoPoints();
       return;
     }
+    this.#renderPoints();
+  }
 
-    for (let i = 0; i < this.#boardPoints.length; i++) {
-      this.#renderPoint(this.#boardPoints[i]);
-    }
+  #clearPointList() {
+    this.#pointPresenters.forEach((presenter) => presenter.destroy());
+    this.#pointPresenters.clear();
   }
 }

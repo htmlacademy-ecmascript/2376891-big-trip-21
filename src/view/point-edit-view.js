@@ -28,11 +28,11 @@ function createDestinationListTemplate(name, destinations) {
   return destinationListTemplate;
 }
 
-function createEventOffersTemplate(pointOffersByType) {
+function createEventOffersTemplate(pointOffers) {
   let eventOffersTemplate = '';
 
-  if (pointOffersByType) {
-    eventOffersTemplate += pointOffersByType.map((offer) =>
+  if (pointOffers) {
+    eventOffersTemplate += pointOffers.map((offer) =>
       `<div class="event__offer-selector">
           <input class="event__offer-checkbox  visually-hidden" id="event-offer-${changeToLowercase(offer.title)}-1" type="checkbox" name="event-offer-${changeToLowercase(offer.title)}" checked>
           <label class="event__offer-label" for="event-offer-${changeToLowercase(offer.title)}-1">
@@ -68,7 +68,7 @@ function createDestinationTemplate({description, pictures}) {
   return destinationTemplate;
 }
 
-function createPointEditTemplate({destinations, pointOffersByType, point, pointDestination, pointTypes}) {
+function createPointEditTemplate({destinations, pointDestination, pointOffers, point, pointTypes}) {
   const {type, dateTo, dateFrom, basePrice} = point;
 
   return (
@@ -123,7 +123,7 @@ function createPointEditTemplate({destinations, pointOffersByType, point, pointD
             <h3 class="event__section-title  event__section-title--offers">Offers</h3>
 
             <div class="event__available-offers">
-              ${createEventOffersTemplate(pointOffersByType)}
+              ${createEventOffersTemplate(pointOffers)}
             </div>
           </section>
 
@@ -137,15 +137,15 @@ export default class PointEditView extends AbstractView {
   #point = null;
   #destinations = null;
   #pointDestination = null;
-  #pointOffersByType = null;
+  #pointOffers = null;
   #pointTypes = null;
   #handleFormSubmit = null;
 
-  constructor({destinations, pointDestination, pointOffersByType, point = POINT_EMPTY, pointTypes, onFormSubmit}) {
+  constructor({destinations, pointDestination, pointOffers, point = POINT_EMPTY, pointTypes, onFormSubmit}) {
     super();
     this.#destinations = destinations;
     this.#pointDestination = pointDestination;
-    this.#pointOffersByType = pointOffersByType;
+    this.#pointOffers = pointOffers;
     this.#point = point;
     this.#pointTypes = pointTypes;
     this.#handleFormSubmit = onFormSubmit;
@@ -156,15 +156,15 @@ export default class PointEditView extends AbstractView {
   get template() {
     return createPointEditTemplate({
       destinations: this.#destinations,
-      pointOffersByType: this.#pointOffersByType,
-      point: this.#point,
       pointDestination: this.#pointDestination,
+      pointOffers: this.#pointOffers,
+      point: this.#point,
       pointTypes: this.#pointTypes,
     });
   }
 
   #formSubmitHandler = (evt) => {
     evt.preventDefault();
-    this.#handleFormSubmit();
+    this.#handleFormSubmit(this.#point);
   };
 }
