@@ -24,4 +24,8 @@ function updateItem(items, update) {
   return items.map((item) => item.id === update.id ? update : item);
 }
 
-export {getRandomInteger, getRandomValue, capitalize, changeToLowercase, updateItem};
+function isEscape(evt) {
+  return evt.key === 'Escape';
+}
+
+export {getRandomInteger, getRandomValue, capitalize, changeToLowercase, updateItem, isEscape};

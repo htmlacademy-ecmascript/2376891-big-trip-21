@@ -81,4 +81,12 @@ const Mode = {
   EDITING: 'EDITING',
 };
 
-export {POINT_COUNT, OfferCount, DESTINATION_COUNT, CITIES, DESCRIPTION, OfferTitle, Picture, Price, Duration, TYPES, POINT_EMPTY, FilterType, Mode};
+const SortType = {
+  DAY: 'day',
+  EVENT: 'event',
+  TIME: 'time',
+  PRICE: 'price',
+  OFFERS: 'offers',
+};
+
+export {POINT_COUNT, OfferCount, DESTINATION_COUNT, CITIES, DESCRIPTION, OfferTitle, Picture, Price, Duration, TYPES, POINT_EMPTY, FilterType, Mode, SortType};
