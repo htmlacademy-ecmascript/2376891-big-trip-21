@@ -28,13 +28,13 @@ function createDestinationListTemplate(name, destinations) {
   return destinationListTemplate;
 }
 
-function createEventOffersTemplate(pointOffers) {
+function createEventOffersTemplate(pointOffers, pointCheckedOffers) {
   let eventOffersTemplate = '';
 
   if (pointOffers) {
     eventOffersTemplate += pointOffers.map((offer) =>
       `<div class="event__offer-selector">
-          <input class="event__offer-checkbox  visually-hidden" id="event-offer-${changeToLowercase(offer.title)}-1" type="checkbox" name="event-offer-${changeToLowercase(offer.title)}" checked>
+          <input class="event__offer-checkbox  visually-hidden" id="event-offer-${changeToLowercase(offer.title)}-1" type="checkbox" name="event-offer-${changeToLowercase(offer.title)}" ${pointCheckedOffers.includes(offer.id) ? 'checked' : ''}>
           <label class="event__offer-label" for="event-offer-${changeToLowercase(offer.title)}-1">
             <span class="event__offer-title">${offer.title}</span>
             &plus;&euro;&nbsp;
@@ -68,7 +68,7 @@ function createDestinationTemplate({description, pictures}) {
   return destinationTemplate;
 }
 
-function createPointEditTemplate({destinations, pointDestination, pointOffers, point, pointTypes}) {
+function createPointEditTemplate({destinations, pointDestination, pointOffers, pointCheckedOffers, point, pointTypes}) {
   const {type, dateTo, dateFrom, basePrice} = point;
 
   return (
@@ -116,14 +116,17 @@ function createPointEditTemplate({destinations, pointDestination, pointOffers, p
           </div>
 
           <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
-          <button class="event__reset-btn" type="reset">Cancel</button>
+          <button class="event__reset-btn" type="reset">Delete</button>
+          <button class="event__rollup-btn" type="button">
+              <span class="visually-hidden">Open event</span>
+          </button>
         </header>
         <section class="event__details">
           <section class="event__section  event__section--offers">
             <h3 class="event__section-title  event__section-title--offers">Offers</h3>
 
             <div class="event__available-offers">
-              ${createEventOffersTemplate(pointOffers)}
+              ${createEventOffersTemplate(pointOffers, pointCheckedOffers)}
             </div>
           </section>
 
@@ -138,19 +141,24 @@ export default class PointEditView extends AbstractView {
   #destinations = null;
   #pointDestination = null;
   #pointOffers = null;
+  #pointCheckedOffers = null;
   #pointTypes = null;
   #handleFormSubmit = null;
+  #handleRollupClick = null;
 
-  constructor({destinations, pointDestination, pointOffers, point = POINT_EMPTY, pointTypes, onFormSubmit}) {
+  constructor({destinations, pointDestination, pointOffers, pointCheckedOffers, point = POINT_EMPTY, pointTypes, onFormSubmit, onRollupClick}) {
     super();
     this.#destinations = destinations;
     this.#pointDestination = pointDestination;
     this.#pointOffers = pointOffers;
+    this.#pointCheckedOffers = pointCheckedOffers;
     this.#point = point;
     this.#pointTypes = pointTypes;
     this.#handleFormSubmit = onFormSubmit;
+    this.#handleRollupClick = onRollupClick;
 
     this.element.querySelector('form').addEventListener('submit', this.#formSubmitHandler);
+    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#rollupClickHandler);
   }
 
   get template() {
@@ -158,6 +166,7 @@ export default class PointEditView extends AbstractView {
       destinations: this.#destinations,
       pointDestination: this.#pointDestination,
       pointOffers: this.#pointOffers,
+      pointCheckedOffers: this.#pointCheckedOffers,
       point: this.#point,
       pointTypes: this.#pointTypes,
     });
@@ -166,5 +175,10 @@ export default class PointEditView extends AbstractView {
   #formSubmitHandler = (evt) => {
     evt.preventDefault();
     this.#handleFormSubmit(this.#point);
+  };
+
+  #rollupClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleRollupClick();
   };
 }

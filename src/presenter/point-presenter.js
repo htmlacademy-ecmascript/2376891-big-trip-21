@@ -1,7 +1,8 @@
 import PointView from '../view/point-view.js';
 import PointEditView from '../view/point-edit-view.js';
 import {render, replace, remove} from '../framework/render.js';
-import { Mode } from '../mock/const.js';
+import {Mode} from '../mock/const.js';
+import { isEscape } from '../utils/common.js';
 
 export default class PointPresenter {
   #pointListContainer = null;
@@ -51,9 +52,11 @@ export default class PointPresenter {
       destinations: this.#destinationsModel.destinations,
       pointDestination: this.#pointDestination,
       pointOffers: this.#pointOffers,
+      pointCheckedOffers: this.#pointCheckedOffers.map((offer) => offer.id),
       point: this.#point,
       pointTypes: this.#pointTypes,
       onFormSubmit: this.#handleFormSubmit,
+      onRollupClick: this.#handleRollupClick,
     });
 
     if (prevPointComponent === null || prevPointEditComponent === null) {
@@ -85,7 +88,7 @@ export default class PointPresenter {
   }
 
   #escKeyDownHandler = (evt) => {
-    if (evt.key === 'Escape') {
+    if (isEscape(evt)) {
       evt.preventDefault();
       this.#replaceFormToPoint();
     }
@@ -110,6 +113,10 @@ export default class PointPresenter {
 
   #handleFormSubmit = (point) => {
     this.#handleDataChange(point);
+    this.#replaceFormToPoint();
+  };
+
+  #handleRollupClick = () => {
     this.#replaceFormToPoint();
   };
 
