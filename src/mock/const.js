@@ -1,25 +1,32 @@
 const POINT_COUNT = 4;
-const DESTINATION_COUNT = 4;
+const DESTINATION_COUNT = 9;
 
 const DEFAULT_TYPE = 'flight';
 
 const CITIES = [
-  'Amsterdam',
+  'Amsterdam',//
   'Chamonix',
   'Geneva',
   'Tokio',
-  'Copenhagen',
+  'Copenhagen',//
   'Paris',
-  'Berlin',
+  'Berlin',//
+  'Oslo',
+  'Helsinki',
 ];
 
 const DESCRIPTION = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras aliquet varius magna, non porta ligula feugiat eget. Fusce tristique felis at fermentum pharetra.';
 
 const OfferTitle = {
-  'taxi': ['Order Uber'],
+  'taxi': ['Order Uber', 'Choose temperature'],
   'flight': ['Add luggage', 'Switch to comfort'],
   'drive': ['Rent a car'],
-  'check-in': ['Add breakfast'],
+  'check-in': ['Add breakfast', 'Add dinner', 'Add lunch'],
+  'bus': ['Book a seat', 'Add luggage'],
+  'train': ['Buy a meal', 'Add luggage'],
+  'ship': ['Buy a buffet&apos;s ticket'],
+  'sightseeing': ['Add an excursion'],
+  'restaurant': ['Book a table'],
 };
 
 const Picture = {
@@ -54,6 +61,11 @@ const Duration = {
 
 const TYPES = [
   'taxi',
+  'bus',
+  'train',
+  'ship',
+  'sightseeing',
+  'restaurant',
   'flight',
   'drive',
   'check-in',
