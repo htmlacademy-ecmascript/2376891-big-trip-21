@@ -19,7 +19,6 @@ export default class BoardPresenter {
   #noPointComponent = new NoPointView();
 
   #boardPoints = [];
-  #pointTypes = null;
   #pointPresenters = new Map();
   #currentSortType = SortType.DAY;
   #sourcedBoardPoints = [];
@@ -33,7 +32,6 @@ export default class BoardPresenter {
 
   init() {
     this.#boardPoints = [...this.#pointsModel.points];
-    this.#pointTypes = this.#boardPoints.map((point) => point.type);
     this.#sourcedBoardPoints = [...this.#pointsModel.points];
 
     this.#renderBoard();
@@ -94,7 +92,6 @@ export default class BoardPresenter {
       pointListContainer: this.#eventListComponent.element,
       destinationsModel: this.#destinationsModel,
       offersModel: this.#offersModel,
-      pointTypes: this.#pointTypes,
       onDataChange: this.#handlePointChange,
       onModeChange: this.#handleModeChange,
     });

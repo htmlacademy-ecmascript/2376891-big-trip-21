@@ -1,7 +1,7 @@
 import PointView from '../view/point-view.js';
 import PointEditView from '../view/point-edit-view.js';
 import {render, replace, remove} from '../framework/render.js';
-import {Mode} from '../mock/const.js';
+import {Mode, TYPES} from '../mock/const.js';
 import { isEscape } from '../utils/common.js';
 
 export default class PointPresenter {
@@ -13,7 +13,6 @@ export default class PointPresenter {
   #pointComponent = null;
   #pointEditComponent = null;
   #point = null;
-  #pointTypes = null;
   #pointDestination = null;
   #pointOffers = null;
   #pointCheckedOffers = null;
@@ -22,11 +21,10 @@ export default class PointPresenter {
   #handleDataChange = null;
   #handleModeChange = null;
 
-  constructor({pointListContainer, destinationsModel, offersModel, pointTypes, onDataChange, onModeChange}) {
+  constructor({pointListContainer, destinationsModel, offersModel, onDataChange, onModeChange}) {
     this.#pointListContainer = pointListContainer;
     this.#destinationsModel = destinationsModel;
     this.#offersModel = offersModel;
-    this.#pointTypes = pointTypes;
     this.#handleDataChange = onDataChange;
     this.#handleModeChange = onModeChange;
   }
@@ -34,29 +32,33 @@ export default class PointPresenter {
   init(point) {
     this.#point = point;
 
-    this.#pointDestination = this.#destinationsModel.getDestinationsById(point.destination);
-    this.#pointOffers = this.#offersModel.getOffersByType(point.type);
-    this.#pointCheckedOffers = point.offers.map((IdOffer) => this.#pointOffers.find((offer) => offer.id === IdOffer));
+    this.#pointDestination = this.#destinationsModel.getDestinationsById(this.#point.destination);
+    this.#pointOffers = this.#offersModel.getOffersByType(this.#point.type);
+
+    if (this.#point.offers === null) {
+      this.#pointCheckedOffers = null;
+    } else {
+      this.#pointCheckedOffers = this.#point.offers.map((IdOffer) => this.#pointOffers.find((offer) => offer.id === IdOffer));
+    }
+    this.#point.checkedOffers = this.#pointCheckedOffers;
+    this.#point.pointOffers = this.#pointOffers;
+    this.#point.pointDestination = this.#pointDestination;
+    this.#point.destinations = this.#destinationsModel.destinations;
 
     const prevPointComponent = this.#pointComponent;
     const prevPointEditComponent = this.#pointEditComponent;
 
     this.#pointComponent = new PointView({
-      pointDestination: this.#pointDestination,
-      pointOffers: this.#pointCheckedOffers,
       point: this.#point,
       onEditClick: this.#handleEditClick,
       onFavoriteClick: this.#handleFavoriteClick,
     });
     this.#pointEditComponent = new PointEditView({
-      destinations: this.#destinationsModel.destinations,
-      pointDestination: this.#pointDestination,
-      pointOffers: this.#pointOffers,
-      pointCheckedOffers: this.#pointCheckedOffers.map((offer) => offer.id),
       point: this.#point,
-      pointTypes: this.#pointTypes,
+      pointTypes: TYPES,
       onFormSubmit: this.#handleFormSubmit,
       onRollupClick: this.#handleRollupClick,
+      onTypeChange: this.#handleTypeChange,
     });
 
     if (prevPointComponent === null || prevPointEditComponent === null) {
@@ -83,6 +85,7 @@ export default class PointPresenter {
 
   resetView() {
     if (this.#mode !== Mode.DEFAULT) {
+      this.#pointEditComponent.reset(this.#point);
       this.#replaceFormToPoint();
     }
   }
@@ -90,6 +93,7 @@ export default class PointPresenter {
   #escKeyDownHandler = (evt) => {
     if (isEscape(evt)) {
       evt.preventDefault();
+      this.#pointEditComponent.reset(this.#point);
       this.#replaceFormToPoint();
     }
   };
@@ -117,8 +121,11 @@ export default class PointPresenter {
   };
 
   #handleRollupClick = () => {
+    this.#pointEditComponent.reset(this.#point);
     this.#replaceFormToPoint();
   };
+
+  #handleTypeChange = (type) => this.#offersModel.getOffersByType(type);
 
   #handleFavoriteClick = () => {
     this.#handleDataChange({...this.#point, isFavorite: !this.#point.isFavorite});
