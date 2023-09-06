@@ -4,13 +4,13 @@ const DESTINATION_COUNT = 9;
 const DEFAULT_TYPE = 'flight';
 
 const CITIES = [
-  'Amsterdam',//
+  'Amsterdam',
   'Chamonix',
   'Geneva',
   'Tokio',
-  'Copenhagen',//
+  'Copenhagen',
   'Paris',
-  'Berlin',//
+  'Berlin',
   'Oslo',
   'Helsinki',
 ];

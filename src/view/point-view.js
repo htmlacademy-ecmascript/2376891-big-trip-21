@@ -38,7 +38,7 @@ function createPointTemplate({dateFrom, dateTo, type, basePrice, pointDestinatio
             —
             <time class="event__end-time" datetime="${dateTo}">${formatStringToTime(dateTo)}</time>
           </p>
-          <p class="event__duration">${getPointDuration(dateTo, dateFrom)}</p>
+          <p class="event__duration">${getPointDuration(dateFrom, dateTo)}</p>
         </div>
         <p class="event__price">
           €&nbsp;<span class="event__price-value">${basePrice}</span>

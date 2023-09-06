@@ -35,7 +35,7 @@ function formatStringToDate(date) {
   return date ? dayjs(date).format(DATE_FORMAT) : '';
 }
 
-function getPointDuration(dateTo, dateFrom) {
+function getPointDuration(dateFrom, dateTo) {
   const timeDiff = dayjs(dateTo).diff(dayjs(dateFrom));
 
   let pointDuration = '';
