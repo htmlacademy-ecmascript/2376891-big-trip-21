@@ -1,28 +1,36 @@
 import AbstractView from '../framework/view/abstract-view.js';
 import {formatStringToShortDate, formatStringToTime, getPointDuration} from '../utils/date.js';
+import { getDestinationsById, getOffersByType, getCheckedOffers } from '../utils/common.js';
 
 function createEventOffersTemplate(pointOffers) {
   let eventOffersTemplate = '';
 
-  if (pointOffers !== null) {
-    pointOffers.forEach((offer) => {
-      if (offer) {
-        const {title, price} = offer;
-
-        eventOffersTemplate += `
-          <li class="event__offer">
-            <span class="event__offer-title">${title}</span>
-            &plus;&euro;&nbsp;
-            <span class="event__offer-price">${price}</span>
-          </li>`;
-      }
-    });
+  if (pointOffers.length === 0) {
+    return '';
   }
+
+  pointOffers.forEach((offer) => {
+    if (offer) {
+      const {title, price} = offer;
+
+      eventOffersTemplate += `
+        <li class="event__offer">
+          <span class="event__offer-title">${title}</span>
+          &plus;&euro;&nbsp;
+          <span class="event__offer-price">${price}</span>
+        </li>`;
+    }
+  });
 
   return eventOffersTemplate;
 }
 
-function createPointTemplate({dateFrom, dateTo, type, basePrice, pointDestination, checkedOffers, isFavorite}) {
+function createPointTemplate(point, destinations, offers) {
+  const {dateFrom, dateTo, type, basePrice, destination, isFavorite} = point;
+
+  const pointDestination = getDestinationsById(destination, destinations);
+  const pointOffers = getOffersByType(point.type, offers);
+  const checkedOffers = getCheckedOffers(point.offers, pointOffers);
 
   return (
     `<li class="trip-events__item">
@@ -62,12 +70,16 @@ function createPointTemplate({dateFrom, dateTo, type, basePrice, pointDestinatio
 
 export default class PointView extends AbstractView {
   #point = null;
+  #destinations = null;
+  #offers = null;
   #handleEditClick = null;
   #handleFavoriteClick = null;
 
-  constructor({point, onEditClick, onFavoriteClick}) {
+  constructor({point, destinations, offers, onEditClick, onFavoriteClick}) {
     super();
     this.#point = point;
+    this.#destinations = destinations;
+    this.#offers = offers;
     this.#handleEditClick = onEditClick;
     this.#handleFavoriteClick = onFavoriteClick;
 
@@ -76,7 +88,7 @@ export default class PointView extends AbstractView {
   }
 
   get template() {
-    return createPointTemplate(this.#point);
+    return createPointTemplate(this.#point, this.#destinations, this.#offers);
   }
 
   #editClickHandler = (evt) => {

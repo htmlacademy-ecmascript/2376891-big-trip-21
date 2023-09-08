@@ -28,4 +28,20 @@ function isEscape(evt) {
   return evt.key === 'Escape';
 }
 
-export {getRandomInteger, getRandomValue, capitalize, changeToLowercase, updateItem, isEscape};
+function getDestinationsById(id, destinations) {
+  return destinations.find((destination) => destination.id === id);
+}
+
+function getDestinationByName(name, destinations) {
+  return destinations.find((destination) => destination.name === name);
+}
+
+function getOffersByType(type, offers) {
+  return offers.find((offer) => offer.type === type).offers;
+}
+
+function getCheckedOffers(checkedOffersId, pointOffers) {
+  return checkedOffersId.map((IdOffer) => pointOffers.find((offer) => offer.id === IdOffer));
+}
+
+export {getRandomInteger, getRandomValue, capitalize, changeToLowercase, updateItem, isEscape, getDestinationsById, getDestinationByName, getOffersByType, getCheckedOffers};
