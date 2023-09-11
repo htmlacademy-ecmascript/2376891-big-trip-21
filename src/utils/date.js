@@ -70,6 +70,14 @@ function isPointPast(date) {
   return dayjs(date) < dayjs();
 }
 
+function isDateEqual(dateA, dateB) {
+  return (dateA === null && dateB === null) || dayjs(dateA).isSame(dateB, 'D');
+}
+
+function sortPointsByDay(pointA, pointB) {
+  return pointA.dateFrom - pointB.dateFrom;
+}
+
 function sortPointsByTime(pointA, pointB) {
   const pointADuration = dayjs(pointA.dateTo).diff(dayjs(pointA.dateFrom));
   const pointBDuration = dayjs(pointB.dateTo).diff(dayjs(pointB.dateFrom));
@@ -80,5 +88,5 @@ function sortPointsByPrice(pointA, pointB) {
   return pointB.basePrice - pointA.basePrice;
 }
 
-export {formatStringToDateTime, formatStringToShortDate, formatStringToTime, formatStringToDate, getPointDuration, getScheduleDate, isPointFuture, isPointPresent, isPointPast, sortPointsByTime, sortPointsByPrice};
+export {formatStringToDateTime, formatStringToShortDate, formatStringToTime, formatStringToDate, getPointDuration, getScheduleDate, isPointFuture, isPointPresent, isPointPast, sortPointsByDay, sortPointsByTime, sortPointsByPrice, isDateEqual};
 

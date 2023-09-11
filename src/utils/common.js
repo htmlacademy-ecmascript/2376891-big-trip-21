@@ -20,12 +20,30 @@ function changeToLowercase(string) {
   return string.split(' ').join('').toLowerCase();
 }
 
-function updateItem(items, update) {
-  return items.map((item) => item.id === update.id ? update : item);
-}
-
 function isEscape(evt) {
   return evt.key === 'Escape';
 }
 
-export {getRandomInteger, getRandomValue, capitalize, changeToLowercase, updateItem, isEscape};
+function getDestinationsById(id, destinations) {
+  if (id) {
+    return destinations.find((destination) => destination.id === id);
+  }
+  return '';
+}
+
+function getDestinationByName(name, destinations) {
+  if (destinations.some((destination) => destination.name === name)) {
+    return destinations.find((destination) => destination.name === name);
+  }
+  return '';
+}
+
+function getOffersByType(type, offers) {
+  return offers.find((offer) => offer.type === type).offers;
+}
+
+function getCheckedOffers(checkedOffersId, pointOffers) {
+  return checkedOffersId.map((IdOffer) => pointOffers.find((offer) => offer.id === IdOffer));
+}
+
+export {getRandomInteger, getRandomValue, capitalize, changeToLowercase, isEscape, getDestinationsById, getDestinationByName, getOffersByType, getCheckedOffers};

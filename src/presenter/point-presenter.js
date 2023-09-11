@@ -2,7 +2,9 @@ import PointView from '../view/point-view.js';
 import PointEditView from '../view/point-edit-view.js';
 import {render, replace, remove} from '../framework/render.js';
 import {Mode, TYPES} from '../mock/const.js';
-import { isEscape } from '../utils/common.js';
+import {isEscape} from '../utils/common.js';
+import {UserAction, UpdateType} from '../mock/const.js';
+import { isDateEqual } from '../utils/date.js';
 
 export default class PointPresenter {
   #pointListContainer = null;
@@ -13,9 +15,6 @@ export default class PointPresenter {
   #pointComponent = null;
   #pointEditComponent = null;
   #point = null;
-  #pointDestination = null;
-  #pointOffers = null;
-  #pointCheckedOffers = null;
   #mode = Mode.DEFAULT;
 
   #handleDataChange = null;
@@ -32,33 +31,24 @@ export default class PointPresenter {
   init(point) {
     this.#point = point;
 
-    this.#pointDestination = this.#destinationsModel.getDestinationsById(this.#point.destination);
-    this.#pointOffers = this.#offersModel.getOffersByType(this.#point.type);
-
-    if (this.#point.offers === null) {
-      this.#pointCheckedOffers = null;
-    } else {
-      this.#pointCheckedOffers = this.#point.offers.map((IdOffer) => this.#pointOffers.find((offer) => offer.id === IdOffer));
-    }
-    this.#point.checkedOffers = this.#pointCheckedOffers;
-    this.#point.pointOffers = this.#pointOffers;
-    this.#point.pointDestination = this.#pointDestination;
-    this.#point.destinations = this.#destinationsModel.destinations;
-
     const prevPointComponent = this.#pointComponent;
     const prevPointEditComponent = this.#pointEditComponent;
 
     this.#pointComponent = new PointView({
       point: this.#point,
+      destinations: this.#destinationsModel.destinations,
+      offers: this.#offersModel.offers,
       onEditClick: this.#handleEditClick,
       onFavoriteClick: this.#handleFavoriteClick,
     });
     this.#pointEditComponent = new PointEditView({
       point: this.#point,
       pointTypes: TYPES,
+      destinations: this.#destinationsModel.destinations,
+      offers: this.#offersModel.offers,
       onFormSubmit: this.#handleFormSubmit,
       onRollupClick: this.#handleRollupClick,
-      onTypeChange: this.#handleTypeChange,
+      onDeleteClick: this.#handleDeleteClick,
     });
 
     if (prevPointComponent === null || prevPointEditComponent === null) {
@@ -115,9 +105,22 @@ export default class PointPresenter {
     this.#replacePointToForm();
   };
 
-  #handleFormSubmit = (point) => {
-    this.#handleDataChange(point);
+  #handleFormSubmit = (update) => {
+    const isMinorUpdate = !isDateEqual(this.#point.dateFrom, update.dateFrom);
+    this.#handleDataChange(
+      UserAction.UPDATE_POINT,
+      isMinorUpdate ? UpdateType.MINOR : UpdateType.PATCH,
+      update,
+    );
     this.#replaceFormToPoint();
+  };
+
+  #handleDeleteClick = (point) => {
+    this.#handleDataChange(
+      UserAction.DELETE_POINT,
+      UpdateType.MINOR,
+      point,
+    );
   };
 
   #handleRollupClick = () => {
@@ -125,9 +128,11 @@ export default class PointPresenter {
     this.#replaceFormToPoint();
   };
 
-  #handleTypeChange = (type) => this.#offersModel.getOffersByType(type);
-
   #handleFavoriteClick = () => {
-    this.#handleDataChange({...this.#point, isFavorite: !this.#point.isFavorite});
+    this.#handleDataChange(
+      UserAction.UPDATE_POINT,
+      UpdateType.MINOR,
+      {...this.#point, isFavorite: !this.#point.isFavorite}
+    );
   };
 }
