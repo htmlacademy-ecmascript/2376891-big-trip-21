@@ -21,7 +21,7 @@ function changeToLowercase(string) {
 }
 
 function isEscape(evt) {
-  return evt.key === 'Escape';
+  return evt.key === 'Escape' || evt.key === 'Esc';
 }
 
 function getDestinationsById(id, destinations) {
