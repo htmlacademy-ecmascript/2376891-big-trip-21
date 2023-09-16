@@ -2,6 +2,7 @@ import SortView from '../view/sort-view.js';
 import EventListView from '../view/event-list-view.js';
 import {render, remove} from '../framework/render.js';
 import NoPointView from '../view/no-point-view.js';
+import LoadingView from '../view/loading-view.js';
 import PointPresenter from './point-presenter.js';
 import NewPointPresenter from './new-point-presenter.js';
 import {SortType, UpdateType, UserAction, FilterType} from '../mock/const.js';
@@ -15,22 +16,26 @@ export default class BoardPresenter {
   #offersModel = null;
   #pointsModel = null;
   #filterModel = null;
+  #mockService = null;
 
   #eventListComponent = new EventListView();
   #sortComponent = null;
   #noPointComponent = null;
+  #loadingComponent = new LoadingView();
 
   #pointPresenters = new Map();
   #newPointPresenter = null;
   #currentSortType = SortType.DAY;
   #filterType = FilterType.EVERYTHING;
+  #isLoading = true;
 
-  constructor({container, destinationsModel, offersModel, pointsModel, filterModel, onNewPointDestroy}) {
+  constructor({container, destinationsModel, offersModel, pointsModel, mockService, filterModel, onNewPointDestroy}) {
     this.#container = container;
     this.#destinationsModel = destinationsModel;
     this.#offersModel = offersModel;
     this.#pointsModel = pointsModel;
     this.#filterModel = filterModel;
+    this.#mockService = mockService;
 
     this.#newPointPresenter = new NewPointPresenter({
       pointListContainer: this.#eventListComponent.element,
@@ -40,7 +45,7 @@ export default class BoardPresenter {
       onDestroy: onNewPointDestroy,
     });
 
-    this.#pointsModel.addObserver(this.#handleModelEvent);
+    this.#mockService.addObserver(this.#handleModelEvent);
     this.#filterModel.addObserver(this.#handleModelEvent);
   }
 
@@ -98,6 +103,11 @@ export default class BoardPresenter {
         this.#clearBoard({resetSortType: true});
         this.#renderBoard();
         break;
+      case UpdateType.INIT:
+        this.#isLoading = false;
+        remove(this.#loadingComponent);
+        this.#renderBoard();
+        break;
     }
   };
 
@@ -135,6 +145,10 @@ export default class BoardPresenter {
     this.points.forEach((point) => this.#renderPoint(point));
   }
 
+  #renderLoading() {
+    render(this.#loadingComponent, this.#container);
+  }
+
   #renderNoPoints() {
     this.#noPointComponent = new NoPointView({
       filterType: this.#filterType
@@ -156,6 +170,11 @@ export default class BoardPresenter {
   }
 
   #renderBoard() {
+    if (this.#isLoading) {
+      this.#renderLoading();
+      return;
+    }
+
     this.#renderSort();
     render(this.#eventListComponent, this.#container);
 
@@ -170,6 +189,8 @@ export default class BoardPresenter {
     this.#newPointPresenter.destroy();
     this.#pointPresenters.forEach((presenter) => presenter.destroy());
     this.#pointPresenters.clear();
+
+    remove(this.#loadingComponent);
 
     if (this.#noPointComponent) {
       remove(this.#noPointComponent);
