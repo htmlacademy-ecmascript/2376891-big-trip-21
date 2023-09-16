@@ -70,9 +70,9 @@ function handleNewPointButtonClick() {
 }
 
 render(new TripInfoView(), tripInfoElement, RenderPosition.AFTERBEGIN);
-filterPresenter.init();
 
 boardPresenter.init();
 mockService.init().finally(() => {
+  filterPresenter.init();
   render(newPointButtonComponent, tripInfoElement);
 });
