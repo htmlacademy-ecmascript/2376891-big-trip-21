@@ -1,12 +1,8 @@
 import {render, replace, remove, RenderPosition} from '../framework/render.js';
-import {filter} from '../utils/filter.js';
-import {FilterType} from '../mock/const.js';
 import {getDestinationsById, getOffersByType, getCheckedOffers} from '../utils/common.js';
 import dayjs from 'dayjs';
 
 import TripInfoView from '../view/trip-info-view.js';
-
-const MIN_DESTINATIONS_AMOUNT = 3;
 
 export default class TripInfoPresenter {
   #tripInfoContainer = null;
@@ -29,33 +25,13 @@ export default class TripInfoPresenter {
 
   init() {
     const prevTripInfoComponent = this.#tripInfoComponent;
-    const points = filter[FilterType.EVERYTHING](this.#pointsModel.points);
-    const destinations = this.#destinationsModel.destinations;
-    const tripInfoDate = `${dayjs(points[0].dateFrom).format('MMM DD')} — ${dayjs(points[points.length - 1].dateTo).format('DD')}`;
-
-    let offers = null;
-    let price = 0; let offersPrice = 0;
-    let tripInfoDestinations = '';
-
-    if (points.length > MIN_DESTINATIONS_AMOUNT) {
-      tripInfoDestinations += `${getDestinationsById(points[0].destination, destinations).name} — ... — ${getDestinationsById(points[points.length - 1].destination, destinations).name}`;
+    const points = this.#pointsModel.points;
+    if (!points) {
+      return '';
     }
-    if (points.length === MIN_DESTINATIONS_AMOUNT) {
-      for (let i = 0; i < points.length; i++) {
-        tripInfoDestinations += `${getDestinationsById(points[i].destination, destinations).name}${i !== 3 ? ' — ' : ''}`;
-      }
-    }
+    const tripDates = `${dayjs(points[0].dateFrom).format('MMM DD')} — ${dayjs(points[points.length - 1].dateTo).format('DD')}`;
 
-    points.forEach((point) => {
-      offers = getCheckedOffers(point.offers, getOffersByType(point.type, this.#offersModel.offers));
-      offers.forEach((offer) => {
-        offersPrice += offer.price;
-      });
-      price += point.basePrice;
-    });
-    price += offersPrice;
-
-    this.#tripInfoComponent = new TripInfoView(tripInfoDestinations, tripInfoDate, price);
+    this.#tripInfoComponent = new TripInfoView(this.#getTripRoute(), tripDates, this.#getTotalTripCost());
 
     if (prevTripInfoComponent === null) {
       render(this.#tripInfoComponent, this.#tripInfoContainer, RenderPosition.AFTERBEGIN);
@@ -64,6 +40,32 @@ export default class TripInfoPresenter {
 
     replace(this.#tripInfoComponent, prevTripInfoComponent);
     remove(prevTripInfoComponent);
+  }
+
+  #getTripRoute() {
+    const points = this.#pointsModel.points;
+    const destinations = this.#destinationsModel.destinations;
+    const firstDestination = getDestinationsById(points[0].destination, destinations).name;
+    const secondDestination = points.length === 3 ? getDestinationsById(points[1].destination, destinations).name : '...';
+    const thirdDestination = getDestinationsById(points[points.length - 1].destination, destinations).name;
+
+    return `${firstDestination} — ${secondDestination} — ${thirdDestination}`;
+  }
+
+  #getTotalTripCost() {
+    let offers = null;
+    let price = 0; let offersPrice = 0;
+
+    this.#pointsModel.points.forEach((point) => {
+      offers = getCheckedOffers(point.offers, getOffersByType(point.type, this.#offersModel.offers));
+      offers.forEach((offer) => {
+        offersPrice += offer.price;
+      });
+      price += point.basePrice;
+    });
+    price += offersPrice;
+
+    return price;
   }
 
   #handleModelEvent = () => {

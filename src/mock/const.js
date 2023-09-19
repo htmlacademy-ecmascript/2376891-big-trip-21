@@ -1,17 +1,5 @@
 const DEFAULT_TYPE = 'flight';
 
-const CITIES = [
-  'Amsterdam',
-  'Chamonix',
-  'Geneva',
-  'Tokio',
-  'Copenhagen',
-  'Paris',
-  'Berlin',
-  'Oslo',
-  'Helsinki',
-];
-
 const TYPES = [
   'taxi',
   'bus',
@@ -67,4 +55,4 @@ const UpdateType = {
   INIT: 'INIT',
 };
 
-export {CITIES, TYPES, POINT_EMPTY, FilterType, Mode, SortType, UserAction, UpdateType};
+export {TYPES, POINT_EMPTY, FilterType, Mode, SortType, UserAction, UpdateType};
