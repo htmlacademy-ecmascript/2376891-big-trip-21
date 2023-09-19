@@ -363,7 +363,7 @@ export default class PointEditView extends AbstractStatefulView {
     delete point.newDestination;
     delete point.isDisabled;
     delete point.isSaving;
-    delete point.isSaving;
+    delete point.isDeleting;
 
     return point;
   }
