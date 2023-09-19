@@ -2,9 +2,9 @@ import Observable from '../framework/observable.js';
 import {UpdateType} from '../mock/const.js';
 
 export default class MockService extends Observable{
-  destinations = [];
-  offers = [];
-  points = [];
+  destinations = null;
+  offers = null;
+  points = null;
   pointsApiService = null;
 
   constructor({pointsApiService}) {
@@ -31,9 +31,9 @@ export default class MockService extends Observable{
       const points = await this.pointsApiService.points;
       this.points = points.map(this.adaptToClient);
     } catch (err) {
-      this.destinations = [];
-      this.offers = [];
-      this.points = [];
+      this.destinations = null;
+      this.offers = null;
+      this.points = null;
     }
     this._notify(UpdateType.INIT, this.points);
   }

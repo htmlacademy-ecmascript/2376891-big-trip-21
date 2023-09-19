@@ -2,12 +2,13 @@ import {render, remove} from '../framework/render.js';
 import {SortType, UpdateType, UserAction, FilterType} from '../mock/const.js';
 import {sortPointsByDay, sortPointsByTime, sortPointsByPrice} from '../utils/date.js';
 import {replace} from '../framework/render.js';
-import {filter} from '../utils/filter.js';
+import {Filter} from '../utils/filter.js';
 import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
 import SortView from '../view/sort-view.js';
 import EventListView from '../view/event-list-view.js';
 import NoPointView from '../view/no-point-view.js';
 import LoadingView from '../view/loading-view.js';
+import FilterPresenter from '../presenter/filter-presenter.js';
 import PointPresenter from './point-presenter.js';
 import NewPointPresenter from './new-point-presenter.js';
 
@@ -23,6 +24,8 @@ export default class BoardPresenter {
   #pointsModel = null;
   #filterModel = null;
   #mockService = null;
+  #handleNewPointButtonDisable = null;
+  #handleNewPointButtonUnlock = null;
 
   #eventListComponent = new EventListView();
   #sortComponent = null;
@@ -31,6 +34,7 @@ export default class BoardPresenter {
 
   #pointPresenters = new Map();
   #newPointPresenter = null;
+  #newFilterPresenter = null;
   #currentSortType = SortType.DAY;
   #filterType = FilterType.EVERYTHING;
   #isLoading = true;
@@ -39,20 +43,30 @@ export default class BoardPresenter {
     upperLimit: TimeLimit.UPPER_LIMIT,
   });
 
-  constructor({container, destinationsModel, offersModel, pointsModel, mockService, filterModel, onNewPointDestroy}) {
+  constructor({container, destinationsModel, offersModel, pointsModel, mockService, filterModel, onNewPointButtonDisable, onNewPointButtonUnblock}) {
     this.#container = container;
     this.#destinationsModel = destinationsModel;
     this.#offersModel = offersModel;
     this.#pointsModel = pointsModel;
     this.#filterModel = filterModel;
     this.#mockService = mockService;
+    this.#handleNewPointButtonDisable = onNewPointButtonDisable;
+    this.#handleNewPointButtonUnlock = onNewPointButtonUnblock;
 
     this.#newPointPresenter = new NewPointPresenter({
       pointListContainer: this.#eventListComponent.element,
       destinationModel: this.#destinationsModel,
       offersModel: this.#offersModel,
       onDataChange: this.#handleViewAction,
-      onDestroy: onNewPointDestroy,
+      onDestroy: this.#handleNewPointButtonUnlock,
+    });
+
+    const filtersElement = document.querySelector('.trip-controls__filters');
+
+    this.#newFilterPresenter = new FilterPresenter({
+      filterContainer: filtersElement,
+      filterModel,
+      pointsModel,
     });
 
     this.#mockService.addObserver(this.#handleModelEvent);
@@ -62,7 +76,11 @@ export default class BoardPresenter {
   get points() {
     this.#filterType = this.#filterModel.filter;
     const points = this.#pointsModel.points;
-    const filteredPoints = filter[this.#filterType](points);
+
+    if (!points) {
+      return null;
+    }
+    const filteredPoints = Filter[this.#filterType](points);
 
     switch (this.#currentSortType) {
       case SortType.DAY:
@@ -177,11 +195,15 @@ export default class BoardPresenter {
     render(this.#loadingComponent, this.#container);
   }
 
-  #renderNoPoints() {
+  #renderNoPoints(isServerAvailable) {
     this.#noPointComponent = new NoPointView({
-      filterType: this.#filterType
+      filterType: this.#filterType,
+      isServerAvailable
     });
-    render(this.#noPointComponent, this.#eventListComponent.element);
+    if (!isServerAvailable) {
+      this.#handleNewPointButtonDisable();
+    }
+    render(this.#noPointComponent, this.#container);
   }
 
   #renderPoint(point) {
@@ -198,18 +220,25 @@ export default class BoardPresenter {
   }
 
   #renderBoard() {
+    const isServerAvailable = Boolean(this.points);
+    this.#newFilterPresenter.init();
+
     if (this.#isLoading) {
       this.#renderLoading();
+      this.#handleNewPointButtonDisable();
       return;
     }
 
+    if (!isServerAvailable || this.points.length === 0) {
+      this.#handleNewPointButtonUnlock();
+      this.#renderNoPoints(isServerAvailable);
+      return;
+    }
+
+    this.#handleNewPointButtonUnlock();
     this.#renderSort();
     render(this.#eventListComponent, this.#container);
 
-    if (this.points.length === 0) {
-      this.#renderNoPoints();
-      return;
-    }
     this.#renderPointsList();
   }
 
