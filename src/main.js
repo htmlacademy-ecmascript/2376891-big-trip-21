@@ -1,7 +1,7 @@
-import TripInfoView from './view/trip-info-view.js';
 import NewPointButtonView from './view/new-point-button-view.js';
 import BoardPresenter from './presenter/board-presenter.js';
 import FilterPresenter from './presenter/filter-presenter.js';
+import TripInfoPresenter from './presenter/trip-info-presenter.js';
 
 import MockService from './service/mock-service.js';
 import DestinationsModel from './model/destinations-model.js';
@@ -10,7 +10,7 @@ import PointsModel from './model/points-model.js';
 import FilterModel from './model/filter-model.js';
 import PointsApiService from './service/points-api-service.js';
 
-import {render, RenderPosition} from './framework/render.js';
+import {render} from './framework/render.js';
 
 const AUTHORIZATION = 'Basic jL5cdM98bdm4md6m';
 const END_POINT = 'https://21.objects.pages.academy/big-trip';
@@ -53,6 +53,14 @@ const filterPresenter = new FilterPresenter({
   pointsModel,
 });
 
+const tripInfoPresenter = new TripInfoPresenter({
+  tripInfoContainer: tripInfoElement,
+  offersModel,
+  destinationsModel,
+  pointsModel,
+  mockService,
+});
+
 /**
  * @type any
  */
@@ -69,10 +77,9 @@ function handleNewPointButtonClick() {
   newPointButtonComponent.element.disabled = true;
 }
 
-render(new TripInfoView(), tripInfoElement, RenderPosition.AFTERBEGIN);
-filterPresenter.init();
-
 boardPresenter.init();
 mockService.init().finally(() => {
+  tripInfoPresenter.init();
+  filterPresenter.init();
   render(newPointButtonComponent, tripInfoElement);
 });
