@@ -1,5 +1,7 @@
 import {render, replace, remove, RenderPosition} from '../framework/render.js';
 import {getDestinationsById, getOffersByType, getCheckedOffers} from '../utils/common.js';
+import {Filter} from '../utils/filter.js';
+import {FilterType} from '../mock/const.js';
 import dayjs from 'dayjs';
 
 import TripInfoView from '../view/trip-info-view.js';
@@ -25,7 +27,7 @@ export default class TripInfoPresenter {
 
   init() {
     const prevTripInfoComponent = this.#tripInfoComponent;
-    const points = this.#pointsModel.points;
+    const points = Filter[FilterType.EVERYTHING](this.#pointsModel.points);
     if (!points) {
       return '';
     }

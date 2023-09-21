@@ -39,9 +39,13 @@ function createEventOffersTemplate(pointOffers, pointCheckedOffers, isDisabled) 
   if (pointOffers.length === 0) {
     return '';
   }
+  let eventOffersTemplate = `<section class="event__section  event__section--offers">
+    <h3 class="event__section-title  event__section-title--offers">Offers</h3>
 
-  return pointOffers.map((offer) =>
-    `<div class="event__offer-selector">
+    <div class="event__available-offers">`;
+
+  pointOffers.map((offer) => {
+    eventOffersTemplate += `<div class="event__offer-selector">
         <input class="event__offer-checkbox  visually-hidden" id="event-offer-${changeToLowercase(offer.title)}-1" type="checkbox" name="event-offer-${changeToLowercase(offer.title)}" data-offer-id="${offer.id}" ${pointCheckedOffers.length > 0 && pointCheckedOffers.includes(offer.id) ? 'checked' : ''} ${isDisabled ? 'disabled' : ''}>
         <label class="event__offer-label" for="event-offer-${changeToLowercase(offer.title)}-1">
           <span class="event__offer-title">${offer.title}</span>
@@ -50,19 +54,28 @@ function createEventOffersTemplate(pointOffers, pointCheckedOffers, isDisabled) 
         </label>
       </div>
 
-      `).join('');
+      `;
+  }
+  );
+  eventOffersTemplate += `</div>
+      </section >`;
+  return eventOffersTemplate;
 }
 
 function createDestinationTemplate({description, pictures}) {
-  let destinationTemplate =
-    `<section class="event__section  event__section--destination">
-      <h3 class="event__section-title  event__section-title--destination">Destination</h3>
-      <p class="event__destination-description">${description ? description : ''}</p>
+  let destinationTemplate = '';
+  if (description !== '') {
+    destinationTemplate +=
+        `<section class="event__section  event__section--destination">
+          <h3 class="event__section-title  event__section-title--destination">Destination</h3>
+          <p class="event__destination-description">${description ? description : ''}</p>
 
-      <div class="event__photos-container">
-        <div class="event__photos-tape">`;
+          `;
+  }
 
-  if (pictures) {
+  if (pictures.length > 0) {
+    destinationTemplate += `<div class="event__photos-container">
+      <div class="event__photos-tape">`;
     pictures.forEach((picture) => {
       destinationTemplate += `<img class="event__photo" src="${picture.src}" alt="${picture.description}">`;
     });
@@ -144,14 +157,7 @@ function createPointEditTemplate(point, pointTypes, destinations, offers, isEdit
 
         </header>
         <section class="event__details">
-          <section class="event__section  event__section--offers">
-            <h3 class="event__section-title  event__section-title--offers">Offers</h3>
-
-            <div class="event__available-offers">
-              ${createEventOffersTemplate(pointOffers, point.offers, isDisabled)}
-            </div>
-          </section>
-
+          ${pointOffers.length > 0 ? createEventOffersTemplate(pointOffers, point.offers, isDisabled) : ''}
           ${createDestinationTemplate(pointDestination ? pointDestination : '')}
         </section>
       </form>
@@ -214,7 +220,9 @@ export default class PointEditView extends AbstractStatefulView {
     this.element.querySelector('.event__type-group').addEventListener('change', this.#typeChangeHandler);
     this.element.querySelector('#event-destination-1').addEventListener('change', this.#destinationChangeHandler);
     this.element.querySelector('#event-price-1').addEventListener('input', this.#priceInputHandler);
-    this.element.querySelector('.event__available-offers').addEventListener('click', this.#offerClickHandler);
+    if (this.element.querySelector('.event__available-offers')) {
+      this.element.querySelector('.event__available-offers').addEventListener('click', this.#offerClickHandler);
+    }
 
     if (this.#handleDeleteClick) {
       this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#rollupClickHandler);
@@ -316,10 +324,13 @@ export default class PointEditView extends AbstractStatefulView {
       {
         dateFormat: 'd/m/y H:i',
         defaultDate: this._state.dateFrom,
-        minDate: new Date(),
+        // minDate: new Date(),
         enableTime: true,
         'time_24hr': true,
         minuteIncrement: 1,
+        locale: {
+          firstDayOfWeek: 1
+        },
         onClose: this.#dateFromChangeHandler,
       },
     );
@@ -332,6 +343,9 @@ export default class PointEditView extends AbstractStatefulView {
         enableTime: true,
         'time_24hr': true,
         minuteIncrement: 1,
+        locale: {
+          firstDayOfWeek: 1
+        },
         onClose: this.#dateToChangeHandler,
       },
     );

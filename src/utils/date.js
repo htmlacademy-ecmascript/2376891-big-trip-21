@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
-import relativeTime from 'dayjs/plugin/relativeTime';
+import utc from 'dayjs/plugin/utc';
 
 const MSEC_IN_SEC = 1000;
 const SEC_IN_MIN = 60;
@@ -17,7 +17,15 @@ const DATE_FORMAT = 'YYYY-MM-DD';
 const SCHEDULE_DATE_FORMAT = 'DD/MM/YY HH:mm';
 
 dayjs.extend(duration);
-dayjs.extend(relativeTime);
+dayjs.extend(utc);
+
+function formatUtc(date) {
+  return dayjs.utc(date).format();
+}
+
+function getScheduleDate(data) {
+  return data ? dayjs(data).format(SCHEDULE_DATE_FORMAT) : '';
+}
 
 function formatStringToDateTime(date) {
   return dayjs(date).format(DATE_TIME_FORMAT);
@@ -54,10 +62,6 @@ function getPointDuration(dateFrom, dateTo) {
   return pointDuration;
 }
 
-function getScheduleDate(data) {
-  return data ? dayjs(data).format(SCHEDULE_DATE_FORMAT) : '';
-}
-
 function isPointFuture(date) {
   return dayjs(date) >= dayjs();
 }
@@ -75,7 +79,7 @@ function isDateEqual(dateA, dateB) {
 }
 
 function sortPointsByDay(pointA, pointB) {
-  return pointA.dateFrom - pointB.dateFrom;
+  return dayjs(pointA.dateFrom).diff(dayjs(pointB.dateFrom));
 }
 
 function sortPointsByTime(pointA, pointB) {
@@ -88,5 +92,5 @@ function sortPointsByPrice(pointA, pointB) {
   return pointB.basePrice - pointA.basePrice;
 }
 
-export {formatStringToDateTime, formatStringToShortDate, formatStringToTime, formatStringToDate, getPointDuration, getScheduleDate, isPointFuture, isPointPresent, isPointPast, sortPointsByDay, sortPointsByTime, sortPointsByPrice, isDateEqual};
+export {formatUtc, formatStringToDateTime, formatStringToShortDate, formatStringToTime, formatStringToDate, getPointDuration, getScheduleDate, isPointFuture, isPointPresent, isPointPast, sortPointsByDay, sortPointsByTime, sortPointsByPrice, isDateEqual};
 

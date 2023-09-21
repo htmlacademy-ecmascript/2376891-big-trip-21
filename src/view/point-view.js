@@ -1,6 +1,7 @@
 import AbstractView from '../framework/view/abstract-view.js';
-import {formatStringToShortDate, formatStringToTime, getPointDuration} from '../utils/date.js';
+import {getPointDuration} from '../utils/date.js';
 import {getDestinationsById, getOffersByType, getCheckedOffers} from '../utils/common.js';
+import { formatStringToShortDate, formatStringToTime } from '../utils/date.js';
 import he from 'he';
 
 function createEventOffersTemplate(pointOffers) {
@@ -28,7 +29,6 @@ function createEventOffersTemplate(pointOffers) {
 
 function createPointTemplate(point, destinations, offers) {
   const {dateFrom, dateTo, type, basePrice, destination, isFavorite} = point;
-
   const pointDestination = getDestinationsById(destination, destinations);
   const pointOffers = getOffersByType(point.type, offers);
   const checkedOffers = getCheckedOffers(point.offers, pointOffers);
@@ -43,7 +43,7 @@ function createPointTemplate(point, destinations, offers) {
         <h3 class="event__title">${type} ${pointDestination ? pointDestination.name : ''}</h3>
         <div class="event__schedule">
           <p class="event__time">
-            <time class="event__start-time" datetime="${dateFrom} ">${formatStringToTime(dateFrom)}</time>
+            <time class="event__start-time" datetime="${dateFrom}">${formatStringToTime(dateFrom)}</time>
             —
             <time class="event__end-time" datetime="${dateTo}">${formatStringToTime(dateTo)}</time>
           </p>
