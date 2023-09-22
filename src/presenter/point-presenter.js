@@ -1,22 +1,18 @@
 import PointView from '../view/point-view.js';
 import PointEditView from '../view/point-edit-view.js';
 import {render, replace, remove} from '../framework/render.js';
-import {Mode, TYPES} from '../mock/const.js';
+import {Mode, TYPES, UserAction, UpdateType} from '../const.js';
 import {isEscape} from '../utils/common.js';
-import {UserAction, UpdateType} from '../mock/const.js';
-import { isDateEqual } from '../utils/date.js';
+import {isDateEqual} from '../utils/date.js';
 
 export default class PointPresenter {
   #pointListContainer = null;
-
   #destinationsModel = null;
   #offersModel = null;
-
   #pointComponent = null;
   #pointEditComponent = null;
   #point = null;
   #mode = Mode.DEFAULT;
-
   #handleDataChange = null;
   #handleModeChange = null;
 
@@ -29,26 +25,25 @@ export default class PointPresenter {
   }
 
   init(point) {
-    this.#point = point;
-
     const prevPointComponent = this.#pointComponent;
     const prevPointEditComponent = this.#pointEditComponent;
+    this.#point = point;
 
     this.#pointComponent = new PointView({
       point: this.#point,
       destinations: this.#destinationsModel.destinations,
       offers: this.#offersModel.offers,
-      onEditClick: this.#handleEditClick,
-      onFavoriteClick: this.#handleFavoriteClick,
+      onEditClick: this.#editClickHandler,
+      onFavoriteClick: this.#favoriteClickHandler,
     });
     this.#pointEditComponent = new PointEditView({
       point: this.#point,
       pointTypes: TYPES,
       destinations: this.#destinationsModel.destinations,
       offers: this.#offersModel.offers,
-      onFormSubmit: this.#handleFormSubmit,
-      onRollupClick: this.#handleRollupClick,
-      onDeleteClick: this.#handleDeleteClick,
+      onFormSubmit: this.#formSubmitHandler,
+      onRollupClick: this.#rollupClickHandler,
+      onDeleteClick: this.#deleteClickHandler,
     });
 
     if (prevPointComponent === null || prevPointEditComponent === null) {
@@ -80,14 +75,6 @@ export default class PointPresenter {
       this.#replaceFormToPoint();
     }
   }
-
-  #escKeyDownHandler = (evt) => {
-    if (isEscape(evt)) {
-      evt.preventDefault();
-      this.#pointEditComponent.reset(this.#point);
-      this.#replaceFormToPoint();
-    }
-  };
 
   setSaving() {
     if (this.#mode === Mode.EDITING) {
@@ -137,12 +124,21 @@ export default class PointPresenter {
     this.#mode = Mode.DEFAULT;
   }
 
-  #handleEditClick = () => {
+  #escKeyDownHandler = (evt) => {
+    if (isEscape(evt)) {
+      evt.preventDefault();
+      this.#pointEditComponent.reset(this.#point);
+      this.#replaceFormToPoint();
+    }
+  };
+
+  #editClickHandler = () => {
     this.#replacePointToForm();
   };
 
-  #handleFormSubmit = (update) => {
+  #formSubmitHandler = (update) => {
     const isMinorUpdate = !isDateEqual(this.#point.dateFrom, update.dateFrom) || this.#point.basePrice !== update.basePrice;
+
     this.#handleDataChange(
       UserAction.UPDATE_POINT,
       isMinorUpdate ? UpdateType.MINOR : UpdateType.PATCH,
@@ -150,7 +146,7 @@ export default class PointPresenter {
     );
   };
 
-  #handleDeleteClick = (point) => {
+  #deleteClickHandler = (point) => {
     this.#handleDataChange(
       UserAction.DELETE_POINT,
       UpdateType.MINOR,
@@ -158,12 +154,12 @@ export default class PointPresenter {
     );
   };
 
-  #handleRollupClick = () => {
+  #rollupClickHandler = () => {
     this.#pointEditComponent.reset(this.#point);
     this.#replaceFormToPoint();
   };
 
-  #handleFavoriteClick = () => {
+  #favoriteClickHandler = () => {
     this.#handleDataChange(
       UserAction.UPDATE_POINT,
       UpdateType.MINOR,

@@ -1,7 +1,7 @@
 import Observable from '../framework/observable.js';
-import {UpdateType} from '../mock/const.js';
+import {UpdateType} from '../const.js';
 
-export default class MockService extends Observable{
+export default class DataService extends Observable{
   destinations = null;
   offers = null;
   points = null;
@@ -26,9 +26,9 @@ export default class MockService extends Observable{
 
   async init() {
     try {
+      const points = await this.pointsApiService.points;
       this.destinations = await this.pointsApiService.destinations;
       this.offers = await this.pointsApiService.offers;
-      const points = await this.pointsApiService.points;
       this.points = points.map(this.adaptToClient);
     } catch (err) {
       this.destinations = null;
