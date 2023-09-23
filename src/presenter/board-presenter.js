@@ -1,9 +1,3 @@
-import {render, remove} from '../framework/render.js';
-import {SortType, UpdateType, UserAction, FilterType} from '../mock/const.js';
-import {sortPointsByDay, sortPointsByTime, sortPointsByPrice} from '../utils/date.js';
-import {replace} from '../framework/render.js';
-import {Filter} from '../utils/filter.js';
-import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
 import SortView from '../view/sort-view.js';
 import EventListView from '../view/event-list-view.js';
 import NoPointView from '../view/no-point-view.js';
@@ -11,6 +5,11 @@ import LoadingView from '../view/loading-view.js';
 import FilterPresenter from '../presenter/filter-presenter.js';
 import PointPresenter from './point-presenter.js';
 import NewPointPresenter from './new-point-presenter.js';
+import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
+import {render, remove, replace} from '../framework/render.js';
+import {SortType, UpdateType, UserAction, FilterType} from '../const.js';
+import {sortPointsByDay, sortPointsByTime, sortPointsByPrice} from '../utils/date.js';
+import {Filter} from '../utils/filter.js';
 
 const TimeLimit = {
   LOWER_LIMIT: 350,
@@ -18,50 +17,53 @@ const TimeLimit = {
 };
 
 export default class BoardPresenter {
-  #container = null;
   #destinationsModel = null;
   #offersModel = null;
   #pointsModel = null;
   #filterModel = null;
-  #mockService = null;
-  #handleNewPointButtonDisable = null;
-  #handleNewPointButtonUnlock = null;
-
-  #eventListComponent = new EventListView();
+  #dataService = null;
   #sortComponent = null;
   #noPointComponent = null;
+  #eventListComponent = new EventListView();
   #loadingComponent = new LoadingView();
-
-  #pointPresenters = new Map();
   #newPointPresenter = null;
   #newFilterPresenter = null;
+  #pointPresenters = new Map();
+  #container = null;
+  #handleNewPointButtonDisable = null;
+  #handleNewPointButtonUnlock = null;
   #currentSortType = SortType.DAY;
   #filterType = FilterType.EVERYTHING;
+  #isServerAvailable = true;
+  _isMessageRemoved = false;
   #isLoading = true;
   #uiBlocker = new UiBlocker({
     lowerLimit: TimeLimit.LOWER_LIMIT,
     upperLimit: TimeLimit.UPPER_LIMIT,
   });
 
-  constructor({container, destinationsModel, offersModel, pointsModel, mockService, filterModel, onNewPointButtonDisable, onNewPointButtonUnblock}) {
+  constructor({container, destinationsModel, offersModel, pointsModel, dataService, filterModel, onNewPointButtonDisable, onNewPointButtonUnblock}) {
     this.#container = container;
     this.#destinationsModel = destinationsModel;
     this.#offersModel = offersModel;
     this.#pointsModel = pointsModel;
     this.#filterModel = filterModel;
-    this.#mockService = mockService;
+    this.#dataService = dataService;
     this.#handleNewPointButtonDisable = onNewPointButtonDisable;
     this.#handleNewPointButtonUnlock = onNewPointButtonUnblock;
+
+    const filtersElement = document.querySelector('.trip-controls__filters');
+
+    render(this.#eventListComponent, this.#container);
 
     this.#newPointPresenter = new NewPointPresenter({
       pointListContainer: this.#eventListComponent.element,
       destinationModel: this.#destinationsModel,
       offersModel: this.#offersModel,
-      onDataChange: this.#handleViewAction,
+      onDataChange: this.#viewActionHandler,
       onDestroy: this.#handleNewPointButtonUnlock,
+      onEditFormClose: this._editFormCloseHandler,
     });
-
-    const filtersElement = document.querySelector('.trip-controls__filters');
 
     this.#newFilterPresenter = new FilterPresenter({
       filterContainer: filtersElement,
@@ -69,17 +71,18 @@ export default class BoardPresenter {
       pointsModel,
     });
 
-    this.#mockService.addObserver(this.#handleModelEvent);
-    this.#filterModel.addObserver(this.#handleModelEvent);
+    this.#dataService.addObserver(this.#modelEventHandler);
+    this.#filterModel.addObserver(this.#modelEventHandler);
   }
 
   get points() {
-    this.#filterType = this.#filterModel.filter;
     const points = this.#pointsModel.points;
+    this.#filterType = this.#filterModel.filter;
 
     if (!points) {
       return null;
     }
+
     const filteredPoints = Filter[this.#filterType](points);
 
     switch (this.#currentSortType) {
@@ -102,81 +105,25 @@ export default class BoardPresenter {
     this.#currentSortType = SortType.DAY;
     this.#filterModel.setFilter(UpdateType.MAJOR, FilterType.EVERYTHING);
     this.#newPointPresenter.init();
+    if (this.#noPointComponent) {
+      this._isMessageRemoved = true;
+      remove(this.#noPointComponent);
+    }
   }
 
-  #handleViewAction = async (actionType, updateType, update) => {
-    this.#uiBlocker.block();
-    switch (actionType) {
-      case UserAction.UPDATE_POINT:
-        this.#pointPresenters.get(update.id).setSaving();
-        try {
-          await this.#pointsModel.updatePoint(updateType, update);
-        } catch (err) {
-          this.#pointPresenters.get(update.id).setAborting();
-        }
-        break;
-      case UserAction.ADD_POINT:
-        this.#newPointPresenter.setSaving();
-        try {
-          await this.#pointsModel.addPoint(updateType, update);
-        } catch(err) {
-          this.#newPointPresenter.setAborting();
-        }
-        break;
-      case UserAction.DELETE_POINT:
-        this.#pointPresenters.get(update.id).setDeleting();
-        try {
-          await this.#pointsModel.deletePoint(updateType, update);
-        } catch(err) {
-          this.#pointPresenters.get(update.id).setAborting();
-        }
-        break;
+  _editFormCloseHandler = () => {
+    if (this._isMessageRemoved) {
+      this.#renderNoPoints(true);
+      this._isMessageRemoved = false;
     }
-
-    this.#uiBlocker.unblock();
-  };
-
-  #handleModelEvent = (updateType, data) => {
-    switch (updateType) {
-      case UpdateType.PATCH:
-        this.#pointPresenters.get(data.id).init(data);
-        break;
-      case UpdateType.MINOR:
-        this.#clearBoard();
-        this.#renderBoard();
-        break;
-      case UpdateType.MAJOR:
-        this.#clearBoard({resetSortType: true});
-        this.#renderBoard();
-        break;
-      case UpdateType.INIT:
-        this.#isLoading = false;
-        remove(this.#loadingComponent);
-        this.#renderBoard();
-        break;
-    }
-  };
-
-  #handleModeChange = () => {
-    this.#newPointPresenter.destroy();
-    this.#pointPresenters.forEach((presenter) => presenter.resetView());
-  };
-
-  #handleSortTypeChange = (sortType) => {
-    if (this.#currentSortType === sortType) {
-      return;
-    }
-    this.#currentSortType = sortType;
-    this.#clearBoard();
-    this.#renderSort();
-    this.#renderBoard();
   };
 
   #renderSort() {
     const prevSortComponent = this.#sortComponent;
+
     this.#sortComponent = new SortView({
       currentSortType: this.#currentSortType,
-      onSortTypeChange: this.#handleSortTypeChange,
+      onSortTypeChange: this.#sortTypeChangeHandler,
     });
 
     if (prevSortComponent === null) {
@@ -211,8 +158,8 @@ export default class BoardPresenter {
       pointListContainer: this.#eventListComponent.element,
       destinationsModel: this.#destinationsModel,
       offersModel: this.#offersModel,
-      onDataChange: this.#handleViewAction,
-      onModeChange: this.#handleModeChange,
+      onDataChange: this.#viewActionHandler,
+      onModeChange: this.#modeChangeHandler,
     });
 
     pointPresenter.init(point);
@@ -220,7 +167,7 @@ export default class BoardPresenter {
   }
 
   #renderBoard() {
-    const isServerAvailable = Boolean(this.points);
+    this.#isServerAvailable = Boolean(this.points);
     this.#newFilterPresenter.init();
 
     if (this.#isLoading) {
@@ -229,9 +176,9 @@ export default class BoardPresenter {
       return;
     }
 
-    if (!isServerAvailable || this.points.length === 0) {
+    if (!this.#isServerAvailable || this.points.length === 0) {
       this.#handleNewPointButtonUnlock();
-      this.#renderNoPoints(isServerAvailable);
+      this.#renderNoPoints(this.#isServerAvailable);
       return;
     }
 
@@ -257,4 +204,72 @@ export default class BoardPresenter {
       this.#currentSortType = SortType.DAY;
     }
   }
+
+  #viewActionHandler = async (actionType, updateType, update) => {
+    this.#uiBlocker.block();
+    switch (actionType) {
+      case UserAction.UPDATE_POINT:
+        this.#pointPresenters.get(update.id).setSaving();
+        try {
+          await this.#pointsModel.updatePoint(updateType, update);
+        } catch (err) {
+          this.#pointPresenters.get(update.id).setAborting();
+        }
+        break;
+      case UserAction.ADD_POINT:
+        this.#newPointPresenter.setSaving();
+        try {
+          await this.#pointsModel.addPoint(updateType, update);
+        } catch(err) {
+          this.#newPointPresenter.setAborting();
+        }
+        break;
+      case UserAction.DELETE_POINT:
+        this.#pointPresenters.get(update.id).setDeleting();
+        try {
+          await this.#pointsModel.deletePoint(updateType, update);
+        } catch(err) {
+          this.#pointPresenters.get(update.id).setAborting();
+        }
+        break;
+    }
+
+    this.#uiBlocker.unblock();
+  };
+
+  #modelEventHandler = (updateType, data) => {
+    switch (updateType) {
+      case UpdateType.PATCH:
+        this.#pointPresenters.get(data.id).init(data);
+        break;
+      case UpdateType.MINOR:
+        this.#clearBoard();
+        this.#renderBoard();
+        break;
+      case UpdateType.MAJOR:
+        this.#clearBoard({resetSortType: true});
+        this.#renderBoard();
+        break;
+      case UpdateType.INIT:
+        this.#isLoading = false;
+        remove(this.#loadingComponent);
+        this.#renderBoard();
+        break;
+    }
+  };
+
+  #modeChangeHandler = () => {
+    this.#newPointPresenter.destroy();
+    this.#pointPresenters.forEach((presenter) => presenter.resetView());
+  };
+
+  #sortTypeChangeHandler = (sortType) => {
+    if (this.#currentSortType === sortType) {
+      return;
+    }
+    this.#currentSortType = sortType;
+    this.#clearBoard();
+    this.#renderSort();
+    this.#renderBoard();
+  };
 }

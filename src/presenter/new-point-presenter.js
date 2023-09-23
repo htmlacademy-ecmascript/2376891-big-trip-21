@@ -1,7 +1,7 @@
-import { remove, render, RenderPosition } from '../framework/render.js';
 import PointEditView from '../view/point-edit-view.js';
-import {UserAction, UpdateType, TYPES} from '../mock/const.js';
-import { isEscape } from '../utils/common.js';
+import {remove, render, RenderPosition} from '../framework/render.js';
+import {UserAction, UpdateType, TYPES} from '../const.js';
+import {isEscape} from '../utils/common.js';
 
 export default class NewPointPresenter {
   #pointListContainer = null;
@@ -9,32 +9,31 @@ export default class NewPointPresenter {
   #offersModel = null;
   #handleDataChange = null;
   #handleDestroy = null;
-
+  #handleEditFormClose = null;
   #pointEditComponent = null;
 
-  constructor({pointListContainer, destinationModel, offersModel, onDataChange, onDestroy}) {
+  constructor({pointListContainer, destinationModel, offersModel, onDataChange, onDestroy, onEditFormClose}) {
     this.#pointListContainer = pointListContainer;
     this.#destinationModel = destinationModel;
     this.#offersModel = offersModel;
     this.#handleDataChange = onDataChange;
     this.#handleDestroy = onDestroy;
+    this.#handleEditFormClose = onEditFormClose;
   }
 
   init() {
     if (this.#pointEditComponent !== null) {
       return;
     }
-
     this.#pointEditComponent = new PointEditView({
       pointTypes: TYPES,
       destinations: this.#destinationModel.destinations,
       offers: this.#offersModel.offers,
-      onFormSubmit: this.#handleFormSubmit,
-      onCancelClick: this.#handleCancelClick,
+      onFormSubmit: this.#formSubmitHandler,
+      onCancelClick: this.#cancelClickHandler,
     });
 
     render(this.#pointEditComponent, this.#pointListContainer, RenderPosition.AFTERBEGIN);
-
     document.addEventListener('keydown', this.#escKeyDownHandler);
   }
 
@@ -47,6 +46,7 @@ export default class NewPointPresenter {
 
     remove(this.#pointEditComponent);
     this.#pointEditComponent = null;
+    this.#handleEditFormClose();
 
     document.removeEventListener('keydown', this.#escKeyDownHandler);
   }
@@ -70,7 +70,7 @@ export default class NewPointPresenter {
     this.#pointEditComponent.shake(resetFormState);
   }
 
-  #handleFormSubmit = (point) => {
+  #formSubmitHandler = (point) => {
     this.#handleDataChange(
       UserAction.ADD_POINT,
       UpdateType.MINOR,
@@ -78,7 +78,7 @@ export default class NewPointPresenter {
     );
   };
 
-  #handleCancelClick = () => {
+  #cancelClickHandler = () => {
     this.destroy();
   };
 

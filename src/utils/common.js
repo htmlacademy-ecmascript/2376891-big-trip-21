@@ -1,9 +1,9 @@
-function capitalize(string) {
-  return `${string[0].toUpperCase()}${string.slice(1)}`;
+function capitalize(name) {
+  return `${name[0].toUpperCase()}${name.slice(1)}`;
 }
 
-function changeToLowercase(string) {
-  return string.split(' ').join('').toLowerCase();
+function changeToLowercase(name) {
+  return name.split(' ').join('').toLowerCase();
 }
 
 function isEscape(evt) {

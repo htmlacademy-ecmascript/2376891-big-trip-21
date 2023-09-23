@@ -1,7 +1,6 @@
 import AbstractView from '../framework/view/abstract-view.js';
-import {getPointDuration} from '../utils/date.js';
+import {getPointDuration, formatStringToShortDate, formatStringToTime} from '../utils/date.js';
 import {getDestinationsById, getOffersByType, getCheckedOffers} from '../utils/common.js';
-import { formatStringToShortDate, formatStringToTime } from '../utils/date.js';
 import he from 'he';
 
 function createEventOffersTemplate(pointOffers) {

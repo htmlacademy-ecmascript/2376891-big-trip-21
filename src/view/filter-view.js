@@ -1,5 +1,5 @@
 import AbstractView from '../framework/view/abstract-view.js';
-import { capitalize } from '../utils/common.js';
+import {capitalize} from '../utils/common.js';
 
 function createFilterItemTemplate(filter, currentFilterType) {
   const {type, count} = filter;
@@ -46,4 +46,3 @@ export default class FilterView extends AbstractView {
     this.#handleFilterTypeChange(evt.target.value);
   };
 }
-

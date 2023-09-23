@@ -1,5 +1,5 @@
-import {FilterType} from '../mock/const';
-import { isPointFuture, isPointPresent, isPointPast } from './date';
+import {FilterType} from '../const';
+import {isPointFuture, isPointPresent, isPointPast} from './date';
 
 const Filter = {
   [FilterType.EVERYTHING]: (points) => points,
